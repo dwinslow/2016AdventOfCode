@@ -44,14 +44,31 @@ public class DayOneTaxi {
     }
 
     public static class TaxiPosition{
-        int x; //-east to +west
-        int y; //-south to +north
+        private int x; //-west to +east
+        private int y; //-south to +north
         TaxiOrientation orientation;
 
         TaxiPosition() {
             x = 0;
             y =  0;
             orientation = TaxiOrientation.NORTH;
+        }
+
+        public void DriveTaxi(int distance) {
+            switch (orientation) {
+                case NORTH:
+                    y += distance;
+                    break;
+                case EAST:
+                    x += distance;
+                    break;
+                case SOUTH:
+                    y -= distance;
+                     break;
+                case WEST:
+                    x -= distance;
+                    break;
+            }
         }
 
         public int TaxiDistanceFromOrigin() {
@@ -61,6 +78,14 @@ public class DayOneTaxi {
         @Override
         public String toString() {
             return super.toString();
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
         }
     }
 
