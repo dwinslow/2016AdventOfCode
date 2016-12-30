@@ -1,4 +1,8 @@
 import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -7,8 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class TaxiPositionTest {
     @Test
     void driveTaxi() {
+        Map<DayOneTaxi.TaxiPosition, Integer> taxiTrail = new HashMap<>(500);
         //check setup
-        DayOneTaxi.TaxiPosition pos = new DayOneTaxi.TaxiPosition();
+        DayOneTaxi.TaxiPosition pos = new DayOneTaxi.TaxiPosition(taxiTrail);
         assertEquals(0, pos.getX());
         assertEquals(0, pos.getY());
         assertEquals(DayOneTaxi.TaxiOrientation.NORTH, pos.getOrientation());
@@ -22,7 +27,7 @@ class TaxiPositionTest {
         assertEquals(5, pos.TaxiDistanceFromOrigin());
 
         //Go in a Circle
-        pos = new DayOneTaxi.TaxiPosition();
+        pos = new DayOneTaxi.TaxiPosition(taxiTrail);
         pos.TurnRight();
         pos.DriveTaxi(2);
         pos.TurnRight();
@@ -32,7 +37,7 @@ class TaxiPositionTest {
         assertEquals(2, pos.TaxiDistanceFromOrigin());
 
 
-        pos = new DayOneTaxi.TaxiPosition();
+        pos = new DayOneTaxi.TaxiPosition(taxiTrail);
         pos.TurnRight();
         pos.DriveTaxi(5);
         pos.TurnLeft();
@@ -43,7 +48,7 @@ class TaxiPositionTest {
         pos.DriveTaxi(3);
         assertEquals(12, pos.TaxiDistanceFromOrigin());
 
-        assertEquals("Santa is at the corner of (10, 2) and is 12 blocks from town\n", pos.toString());
+        assertEquals("The corner of (10, 2) and 12 blocks from drop point\n", pos.toString());
     }
 
   }

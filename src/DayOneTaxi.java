@@ -2,9 +2,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -17,11 +16,14 @@ public class DayOneTaxi {
     public static void main(String[] args) {
         List<String> directions = ParseCsvTaxiDirections(PATH);
         TaxiPosition santa = FollowDrivingDirections(directions);
-        System.out.println("Last place we visited is \n" + santa);
+        System.out.println("Last place we drove to is \n" + santa);
+        System.out.println("Santa's workshop should be at \n" + santa.getFirstVisitedTwice());
+
     }
 
     public static TaxiPosition FollowDrivingDirections(List<String> directions) {
-        TaxiPosition santa = new TaxiPosition();
+        Map<TaxiPosition, Integer> taxiTrail = new HashMap<>(500);
+        TaxiPosition santa = new TaxiPosition(taxiTrail);
 
         for (String direction : directions) {
             char directionCode = direction.charAt(0);
@@ -99,29 +101,72 @@ public class DayOneTaxi {
     public static class TaxiPosition {
         private int x; //-west to +east
         private int y; //-south to +north
-        private TaxiOrientation orientation;
+        private TaxiOrientation orientation; //enumeration
+        private Map<TaxiPosition, Integer> taxiTrail; //Number of times each position has been visited
+        private TaxiPosition firstVisitedTwice = null; //meaningless until
+        private boolean dejaVu = false;
 
-        TaxiPosition() {
-            x = 0;
-            y = 0;
+        TaxiPosition(Map<TaxiPosition, Integer> taxiTrail) {
+            this.taxiTrail = taxiTrail;
+            this.x = 0;
+            this.y = 0;
             orientation = TaxiOrientation.NORTH;
+        }
+
+        TaxiPosition(int x, int y, Map<TaxiPosition, Integer> taxiTrail) {
+            this.taxiTrail = taxiTrail;
+            this.x = x;
+            this.y = y;
+            orientation = TaxiOrientation.NORTH;
+        }
+
+        private void BeenHereBeforeCheck() {
+            if(dejaVu)
+                return;
+            Integer visited = (Integer)taxiTrail.get(this);
+            if(visited > 1) {
+                dejaVu = true;
+                firstVisitedTwice = new TaxiPosition(x, y, taxiTrail);
+            }
         }
 
         void DriveTaxi(int distance) {
             switch (orientation) {
                 case NORTH:
-                    y += distance;
+                    for(int i=1; i<=distance; i++) {
+                        y++;
+                        MarkPositionOnTrail(x, y);
+                        BeenHereBeforeCheck();
+                    }
                     break;
                 case EAST:
-                    x += distance;
+                    for(int i=1; i<=distance; i++) {
+                        x++;
+                        MarkPositionOnTrail(x, y);
+                        BeenHereBeforeCheck();
+                    }
                     break;
                 case SOUTH:
-                    y -= distance;
+                    for(int i=1; i<=distance; i++) {
+                        y--;
+                        MarkPositionOnTrail(x, y);
+                        BeenHereBeforeCheck();
+                    }
                     break;
                 case WEST:
-                    x -= distance;
+                    for(int i=1; i<=distance; i++) {
+                        x--;
+                        MarkPositionOnTrail(x, y);
+                        BeenHereBeforeCheck();
+                    }
                     break;
             }
+        }
+
+        private void MarkPositionOnTrail(int x, int y) {
+            TaxiPosition key = new TaxiPosition(x, y, taxiTrail);
+            Integer defaultTimesVisited = 1;
+            taxiTrail.merge(key, defaultTimesVisited, (u, v) -> u + v );
         }
 
         int TaxiDistanceFromOrigin() {
@@ -136,6 +181,12 @@ public class DayOneTaxi {
             orientation = orientation.AfterRightTurn();
         }
 
+
+        /***
+         * Equality is based only on position, not orientation
+         * @param  obj A potential matching TaxiPosition object.
+         * @return true if x and y positions match
+         */
         @Override
         public boolean equals(Object obj) {
             if (obj == null) {
@@ -146,15 +197,20 @@ public class DayOneTaxi {
             final TaxiPosition pos = (TaxiPosition)obj;
             if(this.x != pos.x) return false;
             if(this.y != pos.y) return false;
-            //if(this.orientation != pos.orientation) return false;
 
             return true;
         }
 
+
+        @Override
+        public int hashCode() {
+            return x+y;
+        }
+
         @Override
         public String toString() {
-            return "Santa is at the corner of (" + x + ", " + y + ") and is " +
-                    TaxiDistanceFromOrigin() + " blocks from headquarters\n";
+            return "The corner of (" + x + ", " + y + ") and " +
+                    TaxiDistanceFromOrigin() + " blocks from drop point\n";
         }
 
         public TaxiOrientation getOrientation() {
@@ -167,6 +223,10 @@ public class DayOneTaxi {
 
         public int getY() {
             return y;
+        }
+
+        public TaxiPosition getFirstVisitedTwice() {
+            return firstVisitedTwice;
         }
     }
 
